@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const knexConfig = {
   development: {
@@ -12,11 +14,11 @@ const knexConfig = {
       database: process.env.DB_NAME,
     },
     migrations: {
-      directory: './migrations',
+      directory: path.resolve(__dirname, './migrations'),
       extension: 'ts',
     },
     seeds: {
-      directory: './seeds',
+      directory: path.resolve(__dirname, './seeds'),
       extension: 'ts',
     },
   },
