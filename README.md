@@ -195,4 +195,4 @@ The assessment permitted faux token authentication. The implementation returns t
 
 - No idempotency keys on funding/transfer — a network retry could potentially create duplicate transactions.
 
-<!-- <img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" /> -->
+<img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" />
