@@ -30,11 +30,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Check Adjutor Karma blacklist
-    // const isBlacklisted = await karmaCheck(email);
-    // if (isBlacklisted) {
-    //   res.status(403).json({ message: 'Account creation not allowed' });
-    //   return;
-    // }
+    const isBlacklisted = await karmaCheck(email);
+    if (isBlacklisted) {
+      res.status(403).json({ message: 'Account creation not allowed' });
+      return;
+    }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);

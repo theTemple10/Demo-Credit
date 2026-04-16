@@ -2,19 +2,23 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import WalletModel from '../models/WalletModel';
 import TransactionModel from '../models/TransactionModel';
-import generateReference from '../utils/generateReference';
+import UserModel from '../models/UserModel';
+import { randomBytes } from 'crypto';
+import db from '../database/db';
+
+const generateReference = (): string => {
+  return `TXN-${randomBytes(16).toString('hex')}`;
+};
 
 export const fundWallet = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { amount } = req.body;
 
-    // Validate amount
     if (!amount || isNaN(amount) || Number(amount) <= 0) {
       res.status(400).json({ message: 'Valid amount is required' });
       return;
     }
 
-    // Get the user's wallet
     const wallet = await WalletModel.findByUserId(req.user!.id);
     if (!wallet) {
       res.status(404).json({ message: 'Wallet not found' });
@@ -24,16 +28,16 @@ export const fundWallet = async (req: AuthRequest, res: Response): Promise<void>
     const fundAmount = Number(amount);
     const newBalance = Number(wallet.balance) + fundAmount;
 
-    // Update the balance
-    await WalletModel.updateBalance(wallet.id!, newBalance);
-
-    // Record the transaction
-    await TransactionModel.create({
-      wallet_id: wallet.id!,
-      type: 'credit',
-      amount: fundAmount,
-      reference: generateReference(),
-      description: 'Wallet funding',
+    await db.transaction(async (trx) => {
+      await trx('wallets').where({ id: wallet.id }).update({ balance: newBalance });
+      await trx('transactions').insert({
+        wallet_id: wallet.id,
+        type: 'credit',
+        amount: fundAmount,
+        reference: generateReference(),
+        status: 'successful',
+        description: 'Wallet funding',
+      });
     });
 
     res.status(200).json({
@@ -56,28 +60,23 @@ export const transferFunds = async (req: AuthRequest, res: Response): Promise<vo
 
     const transferAmount = Number(amount);
 
-    // Get sender's wallet
+    if (req.user!.email === recipient_email.trim().toLowerCase()) {
+      res.status(400).json({ message: 'Cannot transfer to yourself' });
+      return;
+    }
+
     const senderWallet = await WalletModel.findByUserId(req.user!.id);
     if (!senderWallet) {
       res.status(404).json({ message: 'Sender wallet not found' });
       return;
     }
 
-    // Check sufficient balance
     if (Number(senderWallet.balance) < transferAmount) {
       res.status(400).json({ message: 'Insufficient balance' });
       return;
     }
 
-    // Prevent self-transfer
-    if (req.user!.email === recipient_email) {
-      res.status(400).json({ message: 'Cannot transfer to yourself' });
-      return;
-    }
-
-    // Find recipient's wallet
-    const { default: UserModel } = await import('../models/UserModel');
-    const recipient = await UserModel.findByEmail(recipient_email);
+    const recipient = await UserModel.findByEmail(recipient_email.trim().toLowerCase());
     if (!recipient) {
       res.status(404).json({ message: 'Recipient not found' });
       return;
@@ -89,29 +88,30 @@ export const transferFunds = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // Generate one shared reference for both transaction records
     const reference = generateReference();
-
-    // Deduct from sender
     const senderNewBalance = Number(senderWallet.balance) - transferAmount;
-    await WalletModel.updateBalance(senderWallet.id!, senderNewBalance);
-    await TransactionModel.create({
-      wallet_id: senderWallet.id!,
-      type: 'debit',
-      amount: transferAmount,
-      reference: `${reference}-OUT`,
-      description: `Transfer to ${recipient_email}`,
-    });
-
-    // Credit recipient
     const recipientNewBalance = Number(recipientWallet.balance) + transferAmount;
-    await WalletModel.updateBalance(recipientWallet.id!, recipientNewBalance);
-    await TransactionModel.create({
-      wallet_id: recipientWallet.id!,
-      type: 'credit',
-      amount: transferAmount,
-      reference: `${reference}-IN`,
-      description: `Transfer from ${req.user!.email}`,
+
+    await db.transaction(async (trx) => {
+      await trx('wallets').where({ id: senderWallet.id }).update({ balance: senderNewBalance });
+      await trx('transactions').insert({
+        wallet_id: senderWallet.id,
+        type: 'debit',
+        amount: transferAmount,
+        reference: `${reference}-OUT`,
+        status: 'successful',
+        description: `Transfer to ${recipient_email}`,
+      });
+
+      await trx('wallets').where({ id: recipientWallet.id }).update({ balance: recipientNewBalance });
+      await trx('transactions').insert({
+        wallet_id: recipientWallet.id,
+        type: 'credit',
+        amount: transferAmount,
+        reference: `${reference}-IN`,
+        status: 'successful',
+        description: `Transfer from ${req.user!.email}`,
+      });
     });
 
     res.status(200).json({
@@ -134,28 +134,29 @@ export const withdrawFunds = async (req: AuthRequest, res: Response): Promise<vo
 
     const withdrawAmount = Number(amount);
 
-    // Get wallet
     const wallet = await WalletModel.findByUserId(req.user!.id);
     if (!wallet) {
       res.status(404).json({ message: 'Wallet not found' });
       return;
     }
 
-    // Check sufficient balance
     if (Number(wallet.balance) < withdrawAmount) {
       res.status(400).json({ message: 'Insufficient balance' });
       return;
     }
 
-    // Deduct and record
     const newBalance = Number(wallet.balance) - withdrawAmount;
-    await WalletModel.updateBalance(wallet.id!, newBalance);
-    await TransactionModel.create({
-      wallet_id: wallet.id!,
-      type: 'debit',
-      amount: withdrawAmount,
-      reference: generateReference(),
-      description: 'Withdrawal',
+
+    await db.transaction(async (trx) => {
+      await trx('wallets').where({ id: wallet.id }).update({ balance: newBalance });
+      await trx('transactions').insert({
+        wallet_id: wallet.id,
+        type: 'debit',
+        amount: withdrawAmount,
+        reference: generateReference(),
+        status: 'successful',
+        description: 'Withdrawal',
+      });
     });
 
     res.status(200).json({
