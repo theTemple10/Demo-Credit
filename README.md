@@ -3,7 +3,7 @@
 A mobile lending app wallet service built with Node.js, TypeScript, KnexJS, and MySQL.
 
 ## Live URL
-https://demo-credit.up.railway.app
+https://victor-akinremi-lendsqr-be-test.up.railway.app/
 
 ## Table of Contents
 - [About](#about)
@@ -39,41 +39,73 @@ Demo Credit is an MVP wallet service that allows users to create accounts, fund 
 ## Architecture
 
 The project follows a layered architecture:
+
 src/
+
 ├── controllers/      # Handle HTTP request/response logic
+
 ├── models/           # Database query functions per table
+
 ├── routes/           # URL and HTTP method definitions
+
 ├── middlewares/      # Authentication checks
+
 ├── services/         # External service integrations (Adjutor Karma)
+
 ├── database/
+
 │   ├── migrations/   # Database schema version control
+
 │   └── knexfile.ts   # Database configuration
+
 └── utils/            # Shared helper functions
 
 ## E-R Diagram
 
 users
+
 ├── id (PK)
+
 ├── full_name
+
 ├── email (unique)
+
 ├── password (hashed)
+
 ├── phone_number (unique)
+
 ├── bvn
+
 ├── is_active
+
 └── created_at
+
 wallets
+
 ├── id (PK)
+
 ├── user_id (FK → users.id)
+
 ├── balance
+
 └── created_at
+
 transactions
+
 ├── id (PK)
+
 ├── wallet_id (FK → wallets.id)
+
 ├── type (credit | debit)
+
 ├── amount
+
 ├── reference (unique)
+
 ├── status (pending | successful | failed)
+
 ├── description
+
 └── created_at
 
 
