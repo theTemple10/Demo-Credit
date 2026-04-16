@@ -15,6 +15,7 @@ https://victor-akinremi-lendsqr-be-test.up.railway.app/
 - [Getting Started](#getting-started)
 - [Running Tests](#running-tests)
 - [Design Decisions](#design-decisions)
+- [Known Limitations](#known-limitations)
 
 ## About
 Demo Credit is an MVP wallet service that allows users to create accounts, fund their wallets, transfer funds to other users, and withdraw funds. Users on the Lendsqr Adjutor Karma blacklist are blocked from onboarding.
@@ -62,11 +63,7 @@ src/
 
 ## E-R Diagram
 
-<<<<<<< HEAD
-users
-=======
 **users**
->>>>>>> f971cede175f1535e5e073c607944db506a63a87
 
 ├── id (PK)
 
@@ -84,11 +81,7 @@ users
 
 └── created_at
 
-<<<<<<< HEAD
-wallets
-=======
 **wallets**
->>>>>>> f971cede175f1535e5e073c607944db506a63a87
 
 ├── id (PK)
 
@@ -98,11 +91,7 @@ wallets
 
 └── created_at
 
-<<<<<<< HEAD
-transactions
-=======
 **transactions**
->>>>>>> f971cede175f1535e5e073c607944db506a63a87
 
 ├── id (PK)
 
@@ -180,27 +169,30 @@ CREATE DATABASE demo_credit_test;
 
 ## Design Decisions
 
-**Why KnexJS over a full ORM like TypeORM?**
-Knex gives fine-grained control over SQL queries while still providing 
-a clean JavaScript interface. For a financial application where 
-precise query control matters, this is preferable to a heavy ORM 
-that abstracts too much.
+**Automatic wallet creation on registration**
+A user without a wallet is an incomplete account in this system. Rather than requiring a separate API call to create a wallet, the registration endpoint automatically creates a wallet for every new user. This ensures data integrity and simplifies the client integration.
 
-**Why separate debit/credit transactions for transfers?**
-Each wallet maintains its own complete transaction history. 
-When a transfer occurs, two records are created — a debit on the 
-sender's wallet and a credit on the recipient's wallet. 
-This mirrors how real banking systems work and ensures each 
-wallet's history is self-contained and auditable.
+**Two transaction records per transfer**
+When a transfer occurs, two records are created — a debit on the sender's wallet and a credit on the recipient's wallet. This mirrors how real banking systems work. Each wallet maintains a complete, self-contained transaction history. To audit what happened to any wallet, you only need to query that wallet's transactions — no cross-referencing required.
 
-**Why hash passwords with bcryptjs?**
-Passwords are never stored as plain text. bcrypt hash the passwords 
-automatically, meaning even identical passwords produce different 
-hashes, protecting against rainbow table attacks.
+**Database transaction scoping on all write operations**
+Every operation that writes to the database (fund, transfer, withdraw) is wrapped in a database transaction using Knex's transaction API. This means if anything fails midway — for example, the server crashes after debiting the sender but before crediting the recipient — the entire operation rolls back. No partial states, no inconsistent balances.
 
-**Karma blacklist check placement**
-The check happens at registration, not login. 
-This is intentional — a blacklisted user should never 
-get an account in the first place.
+**Karma blacklist check at registration, not login**
+The check happens at the point of account creation. A blacklisted user should never receive an account. Checking at login would mean they already have an account and data in the system, which is not desirable.
 
-<img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" />
+**Faux token authentication**
+The assessment permitted faux token authentication. The implementation returns the user's database ID as the token on login. Protected routes extract this ID from the Authorization header and load the user from the database. In a production system this would be replaced with JWT tokens with expiry, refresh token rotation, and proper signing secrets.
+
+
+## Known Limitations
+
+- Authentication uses a faux token (user ID) as specified. Not suitable for production.
+
+- No rate limiting — a real deployment would need protection against repeated requests.
+
+- No pagination on transaction history — for users with thousands of transactions this   endpoint would become slow.
+
+- No idempotency keys on funding/transfer — a network retry could potentially create duplicate transactions.
+
+<!-- <img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" /> -->
