@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomBytes } from 'crypto';
 
 const generateReference = (): string => {
-  return `TXN-${uuidv4()}`;
+  return `TXN-${randomBytes(16).toString('hex')}`;
 };
 
 export default generateReference;
