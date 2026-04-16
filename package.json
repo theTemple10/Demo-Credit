@@ -12,6 +12,9 @@
     "seed": "knex seed:run --knexfile src/database/knexfile.ts",
     "test": "cross-env NODE_ENV=test jest --coverage --runInBand"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/theTemple10/Demo-Credit.git"

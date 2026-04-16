@@ -1,0 +1,1 @@
+web: npm run build && npx knex migrate:latest --knexfile dist/database/knexfile.js && npm start
