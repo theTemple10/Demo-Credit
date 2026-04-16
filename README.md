@@ -62,7 +62,11 @@ src/
 
 ## E-R Diagram
 
+<<<<<<< HEAD
 users
+=======
+**users**
+>>>>>>> f971cede175f1535e5e073c607944db506a63a87
 
 ├── id (PK)
 
@@ -80,7 +84,11 @@ users
 
 └── created_at
 
+<<<<<<< HEAD
 wallets
+=======
+**wallets**
+>>>>>>> f971cede175f1535e5e073c607944db506a63a87
 
 ├── id (PK)
 
@@ -90,7 +98,11 @@ wallets
 
 └── created_at
 
+<<<<<<< HEAD
 transactions
+=======
+**transactions**
+>>>>>>> f971cede175f1535e5e073c607944db506a63a87
 
 ├── id (PK)
 
@@ -190,3 +202,5 @@ hashes, protecting against rainbow table attacks.
 The check happens at registration, not login. 
 This is intentional — a blacklisted user should never 
 get an account in the first place.
+
+<img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" />
