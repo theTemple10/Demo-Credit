@@ -3,7 +3,7 @@
 A mobile lending app wallet service built with Node.js, TypeScript, KnexJS, and MySQL.
 
 ## Live URL
-https://demo-credit.up.railway.app
+https://victor-akinremi-lendsqr-be-test.up.railway.app/
 
 ## Table of Contents
 - [About](#about)
