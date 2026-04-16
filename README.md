@@ -1,4 +1,3 @@
-<img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" />
 # Demo Credit
 
 A mobile lending app wallet service built with Node.js, TypeScript, KnexJS, and MySQL.
@@ -159,3 +158,5 @@ hashes, protecting against rainbow table attacks.
 The check happens at registration, not login. 
 This is intentional — a blacklisted user should never 
 get an account in the first place.
+
+<img width="1620" height="673" alt="database_schema_sanpshot" src="https://github.com/user-attachments/assets/f410980f-b9ce-4602-972b-eb576ebd5b65" />
